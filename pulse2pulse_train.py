@@ -205,14 +205,10 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
             D_fake.backward(one)
 
             # c) compute gradient penalty and backprop
-            # gradient_penalty = calc_gradient_penalty(netD, real_ecgs,
-            #                                        fake.data, b_size, opt.lmbda,
-            #                                        use_cuda=True)
-
-            # JV 
-            #print(b_size)
             gradient_penalty = calc_gradient_penalty(netD, real_ecgs,
-                                                     fake.data, b_size, opt.lmbda)
+                                                    fake.data, b_size, opt.lmbda,
+                                                    use_cuda=True)
+
 
             gradient_penalty.backward(one)
 

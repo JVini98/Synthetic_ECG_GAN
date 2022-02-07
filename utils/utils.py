@@ -152,7 +152,7 @@ def calc_gradient_penalty(net_dis, real_data, fake_data, batch_size, lmbda, use_
     alpha = alpha.cuda() if use_cuda else alpha
 
     # Interpolate between real and fake data.
-    interpolates = alpha * real_data + (1 - alpha) * fake_data
+    interpolates = alpha * 0 + (1 - alpha) * fake_data
     if use_cuda:
         interpolates = interpolates.cuda()
     interpolates = autograd.Variable(interpolates, requires_grad=True)
