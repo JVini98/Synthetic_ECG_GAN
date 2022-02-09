@@ -33,14 +33,14 @@ parser = argparse.ArgumentParser()
 # Hardware
 parser.add_argument("--device_id", type=int, default=0, help="Device ID to run the code")
 parser.add_argument("--exp_name", type=str, required=True,
-                    help="A name to the experiment which is used to save checkpoitns and tensorboard output")
+                    help="A name to the experiment which is used to save checkpoints and tensorboard output")
 # parser.add_argument("--py_file",default=os.path.abspath(__file__)) # store current python file
 
 
 # ==============================
 # Directory and file handling
 # ==============================
-parser.add_argument("--data_dirs", default=["/home/jvini/Escritorio/Pulse2Pulse/sample_ecg_data",
+parser.add_argument("--data_dirs", default=["/home/jvini/PycharmProjects/pulse2pulse_pycharm/sample_ecg_data_short",
                                             ], help="Data roots", nargs="*")
 
 parser.add_argument("--out_dir",
