@@ -42,20 +42,20 @@ class Transpose1dLayer_multi_input(nn.Module):
         else:
             return self.Conv1dTrans(x)
 
-class WaveGANGenerator(nn.Module):
-    def __init__(self, model_size=50, ngpus=1, num_channels=8,
-                 #latent_dim=100, 
-                 post_proc_filt_len=512,
+
+class Pulse2pulseGenerator(nn.Module):
+    def __init__(self, model_size=50, ngpus=1, num_channels=1,
+                 latent_dim=100, post_proc_filt_len=512,
                  verbose=False, upsample=True):
-        super(WaveGANGenerator, self).__init__()
+        super(Pulse2pulseGenerator, self).__init__()
         self.ngpus = ngpus
         self.model_size = model_size  # d
         self.num_channels = num_channels  # c
-        #self.latent_di = latent_dim
+        self.latent_di = latent_dim
         self.post_proc_filt_len = post_proc_filt_len
         self.verbose = verbose
         # "Dense" is the same meaning as fully connection.
-        #self.fc1 = nn.Linear(latent_dim, 10 * model_size)
+        self.fc1 = nn.Linear(latent_dim, 10 * model_size)
 
         stride = 4
         if upsample:
@@ -82,7 +82,7 @@ class WaveGANGenerator(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight.data)
+                nn.init.kaiming_normal(m.weight.data)
 
     def forward(self, x):
 
@@ -133,6 +133,7 @@ class WaveGANGenerator(nn.Module):
             print(output.shape)
         return output
 
+
 class PhaseShuffle(nn.Module):
     """
     Performs phase shuffling, i.e. shifting feature axis of a 3D tensor
@@ -174,6 +175,7 @@ class PhaseShuffle(nn.Module):
                                                        x.shape)
         return x_shuffle
 
+
 class PhaseRemove(nn.Module):
     def __init__(self):
         super(PhaseRemove, self).__init__()
@@ -181,10 +183,11 @@ class PhaseRemove(nn.Module):
     def forward(self, x):
         pass
 
-class WaveGANDiscriminator(nn.Module):
-    def __init__(self, model_size=64, ngpus=1, num_channels=8, shift_factor=2,
+
+class Pulse2pulseDiscriminator(nn.Module):
+    def __init__(self, model_size=64, ngpus=1, num_channels=1, shift_factor=2,
                  alpha=0.2, verbose=False):
-        super(WaveGANDiscriminator, self).__init__()
+        super(Pulse2pulseDiscriminator, self).__init__()
         self.model_size = model_size  # d
         self.ngpus = ngpus
         self.num_channels = num_channels  # c
@@ -207,11 +210,11 @@ class WaveGANDiscriminator(nn.Module):
         self.ps5 = PhaseShuffle(shift_factor)
         self.ps6 = PhaseShuffle(shift_factor)
 
-        self.fc1 = nn.Linear(12500, 1)
+        self.fc1 = nn.Linear(22500, 1)
 
         for m in self.modules():
             if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight.data)
+                nn.init.kaiming_normal(m.weight.data)
 
     def forward(self, x):
         x = F.leaky_relu(self.conv1(x), negative_slope=self.alpha)
@@ -253,6 +256,7 @@ class WaveGANDiscriminator(nn.Module):
             print(x.shape)
 
         return self.fc1(x)
+
 
 """
 from torch.autograd import Variable

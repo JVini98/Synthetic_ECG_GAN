@@ -42,20 +42,20 @@ class Transpose1dLayer_multi_input(nn.Module):
         else:
             return self.Conv1dTrans(x)
 
-class WaveGANGenerator(nn.Module):
+
+class Pulse2pulseGenerator(nn.Module):
     def __init__(self, model_size=50, ngpus=1, num_channels=8,
-                 #latent_dim=100, 
-                 post_proc_filt_len=512,
+                 latent_dim=100, post_proc_filt_len=512,
                  verbose=False, upsample=True):
-        super(WaveGANGenerator, self).__init__()
+        super(Pulse2pulseGenerator, self).__init__()
         self.ngpus = ngpus
         self.model_size = model_size  # d
         self.num_channels = num_channels  # c
-        #self.latent_di = latent_dim
+        self.latent_di = latent_dim
         self.post_proc_filt_len = post_proc_filt_len
         self.verbose = verbose
         # "Dense" is the same meaning as fully connection.
-        #self.fc1 = nn.Linear(latent_dim, 10 * model_size)
+        self.fc1 = nn.Linear(latent_dim, 10 * model_size)
 
         stride = 4
         if upsample:
@@ -88,15 +88,15 @@ class WaveGANGenerator(nn.Module):
 
         #print("x shape:", x.shape)
         conv_1_out = F.leaky_relu(self.conv_1(x)) # x = (bs, 8, 5000)
-       # print("conv_1_out shape:", conv_1_out.shape)
+        #print("conv_1_out shape:", conv_1_out.shape)
         conv_2_out = F.leaky_relu(self.conv_2(conv_1_out))
-       # print("conv_2_out shape:", conv_2_out.shape)
+        #print("conv_2_out shape:", conv_2_out.shape)
         conv_3_out = F.leaky_relu(self.conv_3(conv_2_out))
-       # print("conv_3_out shape:", conv_3_out.shape)
+        #print("conv_3_out shape:", conv_3_out.shape)
         conv_4_out = F.leaky_relu(self.conv_4(conv_3_out))
-       # print("conv_4_out shape:", conv_4_out.shape)
+        #print("conv_4_out shape:", conv_4_out.shape)
         conv_5_out = F.leaky_relu(self.conv_5(conv_4_out))
-       # print("conv_5_out shape:", conv_5_out.shape)
+        #print("conv_5_out shape:", conv_5_out.shape)
         x = F.leaky_relu(self.conv_6(conv_5_out))
         #print("last x shape:", x.shape)
 
@@ -132,6 +132,7 @@ class WaveGANGenerator(nn.Module):
         if self.verbose:
             print(output.shape)
         return output
+
 
 class PhaseShuffle(nn.Module):
     """
@@ -174,6 +175,7 @@ class PhaseShuffle(nn.Module):
                                                        x.shape)
         return x_shuffle
 
+
 class PhaseRemove(nn.Module):
     def __init__(self):
         super(PhaseRemove, self).__init__()
@@ -181,10 +183,11 @@ class PhaseRemove(nn.Module):
     def forward(self, x):
         pass
 
-class WaveGANDiscriminator(nn.Module):
+
+class Pulse2pulseDiscriminator(nn.Module):
     def __init__(self, model_size=64, ngpus=1, num_channels=8, shift_factor=2,
                  alpha=0.2, verbose=False):
-        super(WaveGANDiscriminator, self).__init__()
+        super(Pulse2pulseDiscriminator, self).__init__()
         self.model_size = model_size  # d
         self.ngpus = ngpus
         self.num_channels = num_channels  # c
@@ -253,6 +256,7 @@ class WaveGANDiscriminator(nn.Module):
             print(x.shape)
 
         return self.fc1(x)
+
 
 """
 from torch.autograd import Variable

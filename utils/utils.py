@@ -23,6 +23,8 @@ np.random.seed(0)
 LOGGER = logging.getLogger('wavegan')
 LOGGER.setLevel(logging.DEBUG)
 
+NUM_CHANNELS = 1
+
 
 def make_path(output_path):
     if not os.path.isdir(output_path):
@@ -319,10 +321,10 @@ def get_plots_RHTM_10s(true_ecg, fake_ecg):
     #sns_plot = sns.lineplot(x = [i for i in range(len(fake_ecg))], y=fake_ecg, ax=axs[2])
     #print("true ecg shape = ", true_ecg.shape)
     #print("fake ecg shape =", fake_ecg.shape)
-    true_ecg_8_chs = true_ecg.reshape(8, 5000)
-    fake_ecg_8_chs = fake_ecg.reshape(8, 5000)
+    true_ecg_8_chs = true_ecg.reshape(NUM_CHANNELS, 5000)
+    fake_ecg_8_chs = fake_ecg.reshape(NUM_CHANNELS, 5000)
     
-    for i in range(8):
+    for i in range(NUM_CHANNELS):
         sns_plot = sns.lineplot(x = [i for i in range(len(true_ecg_8_chs[i]))], y=true_ecg_8_chs[i], ax = axs[0])
         sns_plot = sns.lineplot(x = [i for i in range(len(fake_ecg_8_chs[i]))], y=fake_ecg_8_chs[i], ax = axs[1])
         
@@ -387,7 +389,7 @@ def get_plots_all_RHTM(true_ecgs, fake_ecgs, num_of_plots = 4):
             
     fig = sns_plot.get_figure()
     fig.set_size_inches(11.7, 15)
-    # fig.savefig(dst_path)
+    fig.savefig("/home/jvini/PycharmProjects/pulse2pulse_pycharm/Pulse2Pulse_out")
     return fig
 
 def get_plots_all_RHTM_10s(true_ecgs, fake_ecgs, num_of_plots = 4):
@@ -405,12 +407,12 @@ def get_plots_all_RHTM_10s(true_ecgs, fake_ecgs, num_of_plots = 4):
 
     for b in range(bs):
 
-        true_ecg_8_chs = true_ecgs[b].reshape(8, 5000)
-        fake_ecg_8_chs = fake_ecgs[b].reshape(8, 5000)
+        true_ecg_8_chs = true_ecgs[b].reshape(NUM_CHANNELS, 5000)
+        fake_ecg_8_chs = fake_ecgs[b].reshape(NUM_CHANNELS, 5000)
     
-        for i in range(8):
-            sns_plot = sns.lineplot(x = [i for i in range(len(true_ecg_8_chs[i]))], y=true_ecg_8_chs[i], ax = axs[b,0])
-            sns_plot = sns.lineplot(x = [i for i in range(len(fake_ecg_8_chs[i]))], y=fake_ecg_8_chs[i], ax = axs[b,1])
+        for i in range(NUM_CHANNELS):
+            sns_plot = sns.lineplot(x = [i for i in range(len(true_ecg_8_chs[i]))], y = true_ecg_8_chs[i], ax = axs[b,0])
+            sns_plot = sns.lineplot(x = [i for i in range(len(fake_ecg_8_chs[i]))], y = fake_ecg_8_chs[i], ax = axs[b,1])
             
     fig = sns_plot.get_figure()
     fig.set_size_inches(11.7, 15)

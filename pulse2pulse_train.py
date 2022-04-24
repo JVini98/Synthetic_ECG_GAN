@@ -22,8 +22,8 @@ from torch import autograd
 # Model specific
 
 from data.ecg_data_loader import ECGDataSimple as ecg_data
-from models.pulse2pulse import WaveGANGenerator as Pulse2PuseGenerator
-from models.pulse2pulse import WaveGANDiscriminator as Pulse2PulseDiscriminator
+from models.pulse2pulse_v2 import Pulse2pulseGenerator as Pulse2PuseGenerator
+from models.pulse2pulse_v2 import Pulse2pulseDiscriminator as Pulse2PulseDiscriminator
 from utils.utils import calc_gradient_penalty, get_plots_RHTM_10s, get_plots_all_RHTM_10s
 
 torch.manual_seed(0)
@@ -40,25 +40,25 @@ parser.add_argument("--exp_name", type=str, required=True,
 # ==============================
 # Directory and file handling
 # ==============================
-parser.add_argument("--data_dirs", default=["/home/jvini/PycharmProjects/pulse2pulse_pycharm/sample_ecg_data_short",
+parser.add_argument("--data_dirs", default=["/home/jvini/PycharmProjects/pulse2pulse_pycharm/sample_ecg_data",
                                             ], help="Data roots", nargs="*")
 
 parser.add_argument("--out_dir",
-                    default="/home/jvini/Escritorio/Pulse2Pulse/Pulse2Pulse_out/output",
+                    default="/home/jvini/PycharmProjects/pulse2pulse_pycharm/Pulse2Pulse_out/output",
                     help="Main output dierectory")
 
 parser.add_argument("--tensorboard_dir",
-                    default="/home/jvini/Escritorio/Pulse2Pulse/Pulse2Pulse_out/tensorboard",
+                    default="/home/jvini/PycharmProjects/pulse2pulse_pycharm/Pulse2Pulse_out/tensorboard",
                     help="Folder to save output of tensorboard")
 # ======================
 # Hyper parameters
 # ======================
-parser.add_argument("--bs", type=int, default=1, help="Mini batch size")
+parser.add_argument("--bs", type=int, default=32, help="Mini batch size")
 parser.add_argument("--lr", type=float, default=0.0001, help="Learning rate for training")
 parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
 
-parser.add_argument("--num_epochs", type=int, default=4000, help="number of epochs of training")
+parser.add_argument("--num_epochs", type=int, default=400, help="number of epochs of training")
 parser.add_argument("--start_epoch", type=int, default=0, help="Start epoch in retraining")
 parser.add_argument("--ngpus", type=int, default=1, help="Number of GPUs used in models")
 parser.add_argument("--checkpoint_interval", type=int, default=25, help="Interval to save checkpoint models")
@@ -66,7 +66,7 @@ parser.add_argument("--checkpoint_interval", type=int, default=25, help="Interva
 # Checkpoint path to retrain or test models
 parser.add_argument("--checkpoint_path", default="", help="Check point path to retrain or test models")
 
-parser.add_argument('-ms', '--model_size', type=int, default=50,
+parser.add_argument('-ms', '--model_size', type=int, default=25,
                     help='Model size parameter used in WaveGAN')
 parser.add_argument('--lmbda', default=10.0, help="Gradient penalty regularization factor")
 
@@ -111,7 +111,7 @@ writer = SummaryWriter(tensorboard_exp_dir)
 # Prepare Data
 # ==========================================
 def prepare_data():
-    dataset = ecg_data(opt.data_dirs, norm_num=6000, cropping=None, transform=None)
+    dataset = ecg_data(opt.data_dirs, norm_num=9000, cropping=None, transform=None)
     print("Dataset size=", len(dataset))
 
     dataloader = torch.utils.data.DataLoader(dataset,
@@ -127,8 +127,8 @@ def prepare_data():
 # Prepare models
 # ===============================================
 def prepare_model():
-    netG = Pulse2PuseGenerator(model_size=opt.model_size, ngpus=opt.ngpus, upsample=True)
-    netD = Pulse2PulseDiscriminator(model_size=opt.model_size, ngpus=opt.ngpus)
+    netG = Pulse2PuseGenerator(model_size=opt.model_size,num_channels=1 ,ngpus=opt.ngpus, upsample=True)
+    netD = Pulse2PulseDiscriminator(model_size=opt.model_size,num_channels=1 ,ngpus=opt.ngpus)
 
     netG = netG.to(device)
     netD = netD.to(device)
@@ -158,6 +158,7 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
         D_cost_train_epoch = []
         D_wass_train_epoch = []
         G_cost_epoch = []
+        D_on_G_Acc = []
 
         for i, sample in tqdm(enumerate(dataloader, 0)):
 
@@ -187,7 +188,7 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
             netD.zero_grad()
 
             # Noise
-            noise = torch.Tensor(b_size, 8, 5000).uniform_(-1, 1)
+            noise = torch.Tensor(b_size, 1, 5000).uniform_(-1, 1)
             noise = noise.to(device)
             noise_Var = Variable(noise, requires_grad=False)
 
@@ -237,13 +238,17 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
                 netG.zero_grad()
 
                 # Noise
-                noise = torch.Tensor(b_size, 8, 5000).uniform_(-1, 1)
+                noise = torch.Tensor(b_size, 1, 5000).uniform_(-1, 1)
 
                 noise = noise.to(device)
                 noise_Var = Variable(noise, requires_grad=False)
 
                 fake = netG(noise_Var)
                 G = netD(fake)
+
+                sig_G = torch.sigmoid(G)
+                acc = torch.mean(((sig_G < .5).float().detach()).float())
+
                 G = G.mean()
 
                 # Update gradients.
@@ -254,8 +259,10 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
 
                 # Record costs
                 # if cuda:
+                acc_cpu = acc.cpu()
                 G_cost_cpu = G_cost.data.cpu()
                 # print("g_cost=",G_cost_cpu)
+                D_on_G_Acc.append(acc_cpu)
                 G_cost_epoch.append(G_cost_cpu)
                 # print("Epoch{} - {}_G_cost_cpu:{}".format(epoch, i, G_cost_cpu))
                 # G_cost_epoch.append(G_cost_cpu.data.numpy())
@@ -272,13 +279,15 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
         D_cost_train_epoch_avg = sum(D_cost_train_epoch) / float(len(D_cost_train_epoch))
         D_wass_train_epoch_avg = sum(D_wass_train_epoch) / float(len(D_wass_train_epoch))
         G_cost_epoch_avg = sum(G_cost_epoch) / float(len(G_cost_epoch))
+        D_on_G_Acc_avg = sum(D_on_G_Acc) / float(len(D_on_G_Acc))
 
         writer.add_scalar("D_cost_train_epoch_avg", D_cost_train_epoch_avg, epoch)
         writer.add_scalar("D_wass_train_epoch_avg", D_wass_train_epoch_avg, epoch)
         writer.add_scalar("G_cost_epoch_avg ", G_cost_epoch_avg, epoch)
+        writer.add_scalar("D_on_G_Acc ", D_on_G_Acc_avg, epoch)
 
-        print("Epochs:{}\t\tD_cost:{}\t\t D_wass:{}\t\tG_cost:{}".format(
-            epoch, D_cost_train_epoch_avg, D_wass_train_epoch_avg, G_cost_epoch_avg))
+        print("Epochs:{}\t\tD_cost:{}\t\t D_wass:{}\t\tG_cost:{}\t\tAcc_D_on_G:{}".format(
+            epoch, D_cost_train_epoch_avg, D_wass_train_epoch_avg, G_cost_epoch_avg, D_on_G_Acc_avg))
 
         # Save model
         if epoch % opt.checkpoint_interval == 0:
@@ -294,7 +303,7 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
 # =====================================
 # Save models
 # =====================================
-def save_model(netG, netD, optimizerG, optimizerD, epoch):
+def save_model(netG, netD, optimizerG, optimizerD, epoch, py_file_name="test"):
     check_point_name = py_file_name + "_epoch:{}.pt".format(epoch)  # get code file name and make a name
     check_point_path = os.path.join(checkpoint_dir, check_point_name)
     # save torch model
