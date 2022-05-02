@@ -1,0 +1,17 @@
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:500.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:1000.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:1500.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:2000.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:2500.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:3000.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:3500.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:4000.pt
+Pulse2Pulse_out/output/prueba_acc/checkpoints/test_epoch:4500.pt
+.idea/.gitignore
+.idea/misc.xml
+.idea/modules.xml
+.idea/pulse2pulse_pycharm.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml
+cuda-repo-ubuntu2004-11-1-local_11.1.0-455.23.05-1_amd64.deb
