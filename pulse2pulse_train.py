@@ -111,7 +111,7 @@ writer = SummaryWriter(tensorboard_exp_dir)
 # Prepare Data
 # ==========================================
 def prepare_data():
-    dataset = ecg_data(opt.data_dirs, norm_num=9000, cropping=None, transform=None)
+    dataset = ecg_data(opt.data_dirs, norm_num=6000, cropping=None, transform=None)
     print("Dataset size=", len(dataset))
 
     dataloader = torch.utils.data.DataLoader(dataset,
