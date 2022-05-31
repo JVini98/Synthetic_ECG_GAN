@@ -179,8 +179,10 @@ class ECGDataSimple(Dataset):
       
         ecg_signals = ecg_signals.float()
         
-        #print(ecg_signals.shape)
+        #print(ecg_signals)
         ecg_signals = ecg_signals  / self.norm_num # Normalizing aplitude of voltage levels 
+        #ecg_signals = (ecg_signals - torch.mean(ecg_signals) )/ (torch.std(ecg_signals)) 
+        #print(ecg_signals)
 
         #cropping
         if self.cropping:

@@ -22,8 +22,8 @@ from torch import autograd
 # Model specific
 
 from data.ecg_data_loader import ECGDataSimple as ecg_data
-from models.pulse2pulse_v2 import Pulse2pulseGenerator as Pulse2PuseGenerator
-from models.pulse2pulse_v2 import Pulse2pulseDiscriminator as Pulse2PulseDiscriminator
+from models.pulse2pulse_v2_tino import Pulse2pulseGenerator as Pulse2PuseGenerator
+from models.pulse2pulse_v2_tino import Pulse2pulseDiscriminator as Pulse2PulseDiscriminator
 from utils.utils import calc_gradient_penalty, get_plots_RHTM_10s, get_plots_all_RHTM_10s
 
 torch.manual_seed(0)
@@ -111,7 +111,7 @@ writer = SummaryWriter(tensorboard_exp_dir)
 # Prepare Data
 # ==========================================
 def prepare_data():
-    dataset = ecg_data(opt.data_dirs, norm_num=6000, cropping=None, transform=None)
+    dataset = ecg_data(opt.data_dirs, norm_num=600, cropping=None, transform=None)
     print("Dataset size=", len(dataset))
 
     dataloader = torch.utils.data.DataLoader(dataset,
@@ -141,8 +141,11 @@ def prepare_model():
 # ====================================
 def run_train():
     netG, netD = prepare_model()
-    optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+    #optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+    #optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+
+    optimizerG = optim.RMSprop(netG.parameters(), lr=opt.lr, momentum=0)
+    optimizerD = optim.RMSprop(netD.parameters(), lr=opt.lr, momentum=0)
 
     dataloaders = prepare_data()
     train(netG, netD, optimizerG, optimizerD, dataloaders)
