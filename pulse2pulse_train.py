@@ -40,7 +40,10 @@ parser.add_argument("--exp_name", type=str, required=True,
 # ==============================
 # Directory and file handling
 # ==============================
-parser.add_argument("--data_dirs", default=["/home/jvini/PycharmProjects/pulse2pulse_pycharm/sample_ecg_data",
+parser.add_argument("--data_dirs_N", default=["/home/jvini/PycharmProjects/pulse2pulse_pycharm/sample_ecg_data",
+                                            ], help="Data roots", nargs="*")
+
+parser.add_argument("--data_dirs_AF", default=["/home/jvini/PycharmProjects/pulse2pulse_pycharm/sample_ecg_data",
                                             ], help="Data roots", nargs="*")
 
 parser.add_argument("--out_dir",
@@ -111,7 +114,17 @@ writer = SummaryWriter(tensorboard_exp_dir)
 # Prepare Data
 # ==========================================
 def prepare_data():
-    dataset = ecg_data(opt.data_dirs, norm_num=600, cropping=None, transform=None)
+    dataset_normal = ecg_data(opt.data_dirs_N, norm_num=600, cropping=None, transform=None)
+    dataset_AF = ecg_data(opt.data_dirs_AF, norm_num=600, cropping=None, transform=None)
+
+    dataset = []
+
+    for i in range(len(dataset_normal)):
+        dataset.append([dataset_normal[i], 0])
+
+    for i in range(len(dataset_AF)):
+        dataset.append([dataset_AF[i], 1])
+
     print("Dataset size=", len(dataset))
 
     dataloader = torch.utils.data.DataLoader(dataset,
