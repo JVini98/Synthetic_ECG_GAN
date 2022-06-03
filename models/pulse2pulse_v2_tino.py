@@ -60,6 +60,8 @@ class Pulse2pulseGenerator(nn.Module):
         if upsample:
             stride = 1
             upsample = 5
+        
+        self.label_embedding = nn.Embedding(2,5000)
 
         self.deconvs = nn.ModuleList([
             Transpose1dLayer(5 * model_size, 5 * model_size, 25, stride, upsample=upsample),
@@ -105,7 +107,11 @@ class Pulse2pulseGenerator(nn.Module):
             if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
                 nn.init.kaiming_normal_(m.weight.data)
 
-    def forward(self, x):
+    def forward(self, x, labels):
+
+        c = self.label_embedding(labels)
+        x = x*c.data
+
         intermediate_outputs = []
         for conv, bn in zip(self.convs, self.conv_bns):
             x = F.leaky_relu(bn(conv(x)))
@@ -167,14 +173,12 @@ class PhaseShuffle(nn.Module):
                                                        x.shape)
         return x_shuffle
 
-
 class PhaseRemove(nn.Module):
     def __init__(self):
         super(PhaseRemove, self).__init__()
 
     def forward(self, x):
         pass
-
 
 class Pulse2pulseDiscriminator(nn.Module):
     def __init__(self, model_size=64, ngpus=1, num_channels=8, shift_factor=2,
@@ -186,6 +190,8 @@ class Pulse2pulseDiscriminator(nn.Module):
         self.shift_factor = shift_factor  # n
         self.alpha = alpha
         self.verbose = verbose
+
+        self.label_embedding = nn.Embedding(2,5000)
 
         self.conv1 = nn.Conv1d(num_channels,  model_size, 25, stride=2, padding=11)
         self.conv2 = nn.Conv1d(model_size, 2 * model_size, 25, stride=2, padding=11)
@@ -202,13 +208,15 @@ class Pulse2pulseDiscriminator(nn.Module):
         self.ps5 = PhaseShuffle(shift_factor)
         self.ps6 = PhaseShuffle(shift_factor)
 
-        self.fc1 = nn.Linear(12500, 1)
+        self.label_embedding = nn.Embedding(2,5000)
+        self.fc1 = nn.Linear(17500, 1)
 
         for m in self.modules():
             if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
                 nn.init.kaiming_normal_(m.weight.data)
 
-    def forward(self, x):
+    def forward(self, x, labels):
+
         x = F.leaky_relu(self.conv1(x), negative_slope=self.alpha)
         if self.verbose:
             print(x.shape)
@@ -246,6 +254,9 @@ class Pulse2pulseDiscriminator(nn.Module):
         x = x.view(-1, x.shape[1] * x.shape[2])
         if self.verbose:
             print(x.shape)
+
+        c = self.label_embedding(labels)
+        x = torch.cat([x, c], 2)
 
         return self.fc1(x)
 
