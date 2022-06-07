@@ -197,7 +197,9 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
             # (1) Train Discriminator
             #############################
 
-            real_ecgs = sample["ecg_signals"].to(device)
+            real_ecgs = sample[0]["ecg_signals"].to(device)
+            labels = sample[1].to(device)
+
             # print("real ecgs shape", real_ecgs.shape)
             b_size = real_ecgs.size(0)
 
@@ -211,13 +213,13 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
             # real_data_Var = numpy_to_var(next(train_iter)['X'], cuda)
 
             # a) compute loss contribution from real training data
-            D_real = netD(real_ecgs)
+            D_real = netD(real_ecgs, labels)
             D_real = D_real.mean()  # avg loss
             D_real.backward(neg_one)  # loss * -1
 
             # b) compute loss contribution from generated data, then backprop.
             fake = autograd.Variable(netG(noise_Var).data)
-            D_fake = netD(fake)
+            D_fake = netD(fake, labels)
             D_fake = D_fake.mean()
             D_fake.backward(one)
 
@@ -259,8 +261,8 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
                 noise = noise.to(device)
                 noise_Var = Variable(noise, requires_grad=False)
 
-                fake = netG(noise_Var)
-                G = netD(fake)
+                fake = netG(noise_Var,labels)
+                G = netD(fake, labels)
 
                 sig_G = torch.sigmoid(G)
                 acc = torch.mean(((sig_G < .5).float().detach()).float())
