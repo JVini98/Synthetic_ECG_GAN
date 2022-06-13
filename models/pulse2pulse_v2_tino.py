@@ -24,6 +24,8 @@ class Transpose1dLayer(nn.Module):
         else:
             return self.Conv1dTrans(x)
 
+
+
 class Transpose1dLayer_multi_input(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, padding=11, upsample=None, output_padding=1):
         super(Transpose1dLayer_multi_input, self).__init__()
@@ -41,6 +43,7 @@ class Transpose1dLayer_multi_input(nn.Module):
             return self.conv1d(self.reflection_pad(self.upsample_layer(x)))
         else:
             return self.Conv1dTrans(x)
+
 
 class Pulse2pulseGenerator(nn.Module):
     def __init__(self, model_size=50, ngpus=1, num_channels=8,
@@ -108,6 +111,11 @@ class Pulse2pulseGenerator(nn.Module):
                 nn.init.kaiming_normal_(m.weight.data)
 
     def forward(self, x, labels):
+
+        def extractDigits(lst):
+            return list(map(lambda el:[el], lst))
+
+        labels = torch.LongTensor(extractDigits(labels.cpu().numpy())).to('cuda')
 
         c = self.label_embedding(labels)
         x = x*c.data
@@ -256,7 +264,7 @@ class Pulse2pulseDiscriminator(nn.Module):
             print(x.shape)
 
         c = self.label_embedding(labels)
-        x = torch.cat([x, c], 2)
+        x = torch.cat([x, c], 1)
 
         return self.fc1(x)
 

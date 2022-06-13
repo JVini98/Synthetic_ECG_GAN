@@ -142,7 +142,7 @@ def split_data(audio_path_list, valid_ratio, test_ratio, batch_size):
 
 
 # Adapted from https://github.com/caogang/wgan-gp/blob/master/gan_toy.py
-def calc_gradient_penalty(net_dis, real_data, fake_data, batch_size, lmbda, use_cuda=False):
+def calc_gradient_penalty(net_dis, labels ,real_data, fake_data, batch_size, lmbda, use_cuda=False):
    
    #JV
     #print(batch_size)
@@ -160,7 +160,7 @@ def calc_gradient_penalty(net_dis, real_data, fake_data, batch_size, lmbda, use_
     interpolates = autograd.Variable(interpolates, requires_grad=True)
 
     # Evaluate discriminator
-    disc_interpolates = net_dis(interpolates)
+    disc_interpolates = net_dis(interpolates,labels)
 
     # Obtain gradients of the discriminator with respect to the inputs
     gradients = autograd.grad(outputs=disc_interpolates, inputs=interpolates,
@@ -312,7 +312,7 @@ def get_plots_RHTM(true_ecg, fake_ecg):
     fig.set_size_inches(11.7, 15)
     # fig.savefig(dst_path)
     return fig
-
+    
 def get_plots_RHTM_10s(true_ecg, fake_ecg):
     #print(true_ecg.shape)
     #for i in range(num_of_samples):

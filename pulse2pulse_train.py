@@ -218,13 +218,13 @@ def train(netG, netD, optimizerG, optimizerD, dataloader):
             D_real.backward(neg_one)  # loss * -1
 
             # b) compute loss contribution from generated data, then backprop.
-            fake = autograd.Variable(netG(noise_Var).data)
+            fake = autograd.Variable(netG(noise_Var, labels).data)
             D_fake = netD(fake, labels)
             D_fake = D_fake.mean()
             D_fake.backward(one)
 
             # c) compute gradient penalty and backprop
-            gradient_penalty = calc_gradient_penalty(netD, real_ecgs,
+            gradient_penalty = calc_gradient_penalty(netD, labels ,real_ecgs,
                                                     fake.data, b_size, opt.lmbda,
                                                     use_cuda=True)
 
